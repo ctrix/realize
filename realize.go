@@ -4,10 +4,10 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"realize/realize"
 	"strconv"
 	"strings"
 	"time"
-	"realize/realize"
 
 	"github.com/oxequa/interact"
 	"github.com/urfave/cli/v2"
