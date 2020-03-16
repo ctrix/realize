@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"realize/realize"
 
 	"github.com/oxequa/interact"
-	"github.com/oxequa/realize/realize"
-	"gopkg.in/urfave/cli.v2"
+	"github.com/urfave/cli/v2"
 )
 
 var r realize.Realize

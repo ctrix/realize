@@ -3,10 +3,10 @@ package main
 import (
 	"bytes"
 	"errors"
-	"github.com/oxequa/realize/realize"
 	"log"
 	"strings"
 	"testing"
+	"realize/realize"
 )
 
 var mockResponse interface{}
