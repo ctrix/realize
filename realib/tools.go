@@ -42,7 +42,7 @@ type Tools struct {
 func (t *Tools) Setup() {
 	var gocmd string
 
-	gocmd = "go"
+        gocmd = "go"
 
 	// go clean
 	if t.Clean.Status {
@@ -50,7 +50,6 @@ func (t *Tools) Setup() {
 		t.Clean.cmd = replace([]string{gocmd, "clean"}, t.Clean.Method)
 		t.Clean.Args = split([]string{}, t.Clean.Args)
 	}
-
 	// go generate
 	if t.Generate.Status {
 		t.Generate.dir = true
@@ -58,7 +57,6 @@ func (t *Tools) Setup() {
 		t.Generate.cmd = replace([]string{gocmd, "generate"}, t.Generate.Method)
 		t.Generate.Args = split([]string{}, t.Generate.Args)
 	}
-
 	// go fmt
 	if t.Fmt.Status {
 		if len(t.Fmt.Args) == 0 {
@@ -68,7 +66,6 @@ func (t *Tools) Setup() {
 		t.Fmt.cmd = replace([]string{"gofmt"}, t.Fmt.Method)
 		t.Fmt.Args = split([]string{}, t.Fmt.Args)
 	}
-
 	// go vet
 	if t.Vet.Status {
 		t.Vet.dir = true
@@ -76,7 +73,6 @@ func (t *Tools) Setup() {
 		t.Vet.cmd = replace([]string{gocmd, "vet"}, t.Vet.Method)
 		t.Vet.Args = split([]string{}, t.Vet.Args)
 	}
-
 	// go test
 	if t.Test.Status {
 		t.Test.dir = true
@@ -84,12 +80,10 @@ func (t *Tools) Setup() {
 		t.Test.cmd = replace([]string{gocmd, "test"}, t.Test.Method)
 		t.Test.Args = split([]string{}, t.Test.Args)
 	}
-
 	// go install
 	t.Install.name = "Install"
 	t.Install.cmd = replace([]string{gocmd, "install"}, t.Install.Method)
 	t.Install.Args = split([]string{}, t.Install.Args)
-
 	// go build
 	if t.Build.Status {
 		t.Build.name = "Build"
@@ -119,13 +113,11 @@ func (t *Tool) Exec(path string, stop <-chan bool) (response Response) {
 	} else if !strings.HasSuffix(path, ".go") {
 		return
 	}
-
 	args := t.Args
 	if strings.HasSuffix(path, ".go") {
 		args = append(args, path)
 		path = filepath.Dir(path)
 	}
-
 	if s := ext(path); s == "" || s == "go" {
 		if t.parent.parent.Settings.Recovery.Tools {
 			log.Println("Tool:", t.name, path, args)
@@ -173,15 +165,13 @@ func (t *Tool) Exec(path string, stop <-chan bool) (response Response) {
 func (t *Tool) Compile(path string, stop <-chan bool) (response Response) {
 	var out bytes.Buffer
 	var stderr bytes.Buffer
-
 	done := make(chan error)
 	args := append(t.cmd, t.Args...)
-
 	cmd := exec.Command(args[0], args[1:]...)
 	if t.Dir != "" {
 		cmd.Dir, _ = filepath.Abs(t.Dir)
 	} else {
-		cmd.Dir, _ = filepath.Abs(path)
+		cmd.Dir = path
 	}
 
         // Check that the cmd.Dir actually exists otherwise the user won't get any error
@@ -193,13 +183,9 @@ func (t *Tool) Compile(path string, stop <-chan bool) (response Response) {
 
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
-
 	// Start command
 	cmd.Start()
-	go func() {
-	        done <- cmd.Wait()
-	}()
-
+	go func() { done <- cmd.Wait() }()
 	// Wait a result
 	response.Name = t.name
 	select {

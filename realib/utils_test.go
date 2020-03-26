@@ -2,7 +2,7 @@ package realize
 
 import (
 	"flag"
-	"github.com/urfave/cli/v2"
+	"gopkg.in/urfave/cli.v2"
 	"os"
 	"path/filepath"
 	"testing"

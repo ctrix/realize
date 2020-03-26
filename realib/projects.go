@@ -25,27 +25,6 @@ var (
 	out BufferOut
 )
 
-// Project info
-type Project struct {
-	Name       string            `yaml:"name"    json:"name"`
-	Path       string            `yaml:"path" json:"path"`
-	Env        map[string]string `yaml:"env,omitempty" json:"env,omitempty"`
-	Args       []string          `yaml:"args,omitempty" json:"args,omitempty"`
-	Tools      Tools             `yaml:"commands" json:"commands"`
-	Watcher    Watch             `yaml:"watcher" json:"watcher"`
-	Buffer     Buffer            `yaml:"-" json:"buffer"`
-	ErrPattern string            `yaml:"pattern,omitempty" json:"pattern,omitempty"`
-	parent     *Realize
-	watcher    FileWatcher
-	stop       chan bool
-	exit       chan os.Signal
-	paths      []string
-	last       last
-	files      int64
-	folders    int64
-	init       bool
-}
-
 // Watch info
 type Watch struct {
 	Exts    []string  `yaml:"extensions" json:"extensions"`
@@ -67,6 +46,27 @@ type Command struct {
 	Path   string `yaml:"path,omitempty" json:"path,omitempty"`
 	Global bool   `yaml:"global,omitempty" json:"global,omitempty"`
 	Output bool   `yaml:"output,omitempty" json:"output,omitempty"`
+}
+
+// Project info
+type Project struct {
+	parent     *Realize
+	watcher    FileWatcher
+	stop       chan bool
+	exit       chan os.Signal
+	paths      []string
+	last       last
+	files      int64
+	folders    int64
+	init       bool
+	Name       string            `yaml:"name" json:"name"`
+	Path       string            `yaml:"path" json:"path"`
+	Env        map[string]string `yaml:"env,omitempty" json:"env,omitempty"`
+	Args       []string          `yaml:"args,omitempty" json:"args,omitempty"`
+	Tools      Tools             `yaml:"commands" json:"commands"`
+	Watcher    Watch             `yaml:"watcher" json:"watcher"`
+	Buffer     Buffer            `yaml:"-" json:"buffer"`
+	ErrPattern string            `yaml:"pattern,omitempty" json:"pattern,omitempty"`
 }
 
 // Last is used to save info about last file changed
@@ -117,7 +117,6 @@ func (p *Project) Before() {
 
 	// setup go tools
 	p.Tools.Setup()
-
 	// global commands before
 	p.cmd(p.stop, "before", true)
 	// indexing files and dirs
@@ -168,16 +167,12 @@ func (p *Project) Change(event fsnotify.Event) {
 
 // Reload launches the toolchain run, build, install
 func (p *Project) Reload(path string, stop <-chan bool) {
-        // path is the Project main Path
-
 	if p.parent.Reload != nil {
 		p.parent.Reload(Context{Project: p, Watcher: p.watcher, Path: path, Stop: stop})
 		return
 	}
-
 	var done bool
 	var install, build Response
-
 	go func() {
 		for {
 			select {
@@ -187,19 +182,14 @@ func (p *Project) Reload(path string, stop <-chan bool) {
 			}
 		}
 	}()
-        // TODO This doesn't really guarantee that done is set if the previous go func
-        // ended properly
-        // Understand what is this for
 	if done {
 		return
 	}
-
 	// before command
 	p.cmd(stop, "before", false)
 	if done {
 		return
 	}
-
 	// Go supported tools
 	if len(path) > 0 {
 		fi, err := os.Stat(path)
@@ -211,10 +201,8 @@ func (p *Project) Reload(path string, stop <-chan bool) {
 		}
 		p.tools(stop, path, fi)
 	}
-
 	// Prevent fake events on polling startup
 	p.init = true
-
 	// prevent errors using realize without config with only run flag
 	if p.Tools.Run.Status && !p.Tools.Install.Status && !p.Tools.Build.Status {
 		p.Tools.Install.Status = true
@@ -222,7 +210,6 @@ func (p *Project) Reload(path string, stop <-chan bool) {
 	if done {
 		return
 	}
-
 	if p.Tools.Install.Status {
 		msg = fmt.Sprintln(p.pname(p.Name, 1), ":", Green.Regular(p.Tools.Install.name), "started")
 		out = BufferOut{Time: time.Now(), Text: p.Tools.Install.name + " started"}
@@ -234,7 +221,6 @@ func (p *Project) Reload(path string, stop <-chan bool) {
 	if done {
 		return
 	}
-
 	if p.Tools.Build.Status {
 		msg = fmt.Sprintln(p.pname(p.Name, 1), ":", Green.Regular(p.Tools.Build.name), "started")
 		out = BufferOut{Time: time.Now(), Text: p.Tools.Build.name + " started"}
@@ -246,7 +232,6 @@ func (p *Project) Reload(path string, stop <-chan bool) {
 	if done {
 		return
 	}
-
 	if install.Err == nil && build.Err == nil && p.Tools.Run.Status {
 		result := make(chan Response)
 		go func() {
@@ -268,7 +253,6 @@ func (p *Project) Reload(path string, stop <-chan bool) {
 				}
 			}
 		}()
-
 		go func() {
 			err := p.run(p.Path, result, stop)
 			if err != nil {
@@ -277,12 +261,10 @@ func (p *Project) Reload(path string, stop <-chan bool) {
 				p.stamp("error", out, msg, "")
 			}
 		}()
-
 	}
 	if done {
 		return
 	}
-
 	p.cmd(stop, "after", false)
 }
 
@@ -425,7 +407,6 @@ func (p *Project) tools(stop <-chan bool, path string, fi os.FileInfo) {
 	done := make(chan bool)
 	result := make(chan Response)
 	v := reflect.ValueOf(p.Tools)
-
 	go func() {
 		for i := 0; i < v.NumField()-1; i++ {
 			tool := v.Field(i).Interface().(Tool)
@@ -442,7 +423,6 @@ func (p *Project) tools(stop <-chan bool, path string, fi os.FileInfo) {
 		}
 		close(done)
 	}()
-
 	for {
 		select {
 		case <-done:
@@ -479,7 +459,6 @@ func (p *Project) cmd(stop <-chan bool, flag string, global bool) {
 		}
 		close(done)
 	}()
-
 	for {
 		select {
 		case <-stop:
@@ -590,12 +569,10 @@ func (p *Project) run(path string, stream chan Response, stop <-chan bool) (err 
 	var args []string
 	var build *exec.Cmd
 	var r Response
-
 	// custom error pattern
 	isErrorText := func(string) bool {
 		return false
 	}
-
 	errRegexp, err := regexp.Compile(p.ErrPattern)
 	if err != nil {
 		r.Err = err
@@ -620,13 +597,11 @@ func (p *Project) run(path string, stream chan Response, stop <-chan bool) (err 
 	}
 
 	name := filepath.Base(path)
-
 	if path == "." && p.Tools.Run.Path == "" {
 		name = filepath.Base(Wdir())
 	} else if p.Tools.Run.Path != "" {
 		name = filepath.Base(dirPath)
 	}
-
 	path = filepath.Join(dirPath, name)
 	if p.Tools.Run.Method != "" {
 		path = p.Tools.Run.Method
@@ -649,37 +624,48 @@ func (p *Project) run(path string, stream chan Response, stop <-chan bool) (err 
             fst, err = os.Stat(path)
 
             if err != nil || fst.IsDir() {
-        	return errors.New("Project executable not found")
+               return errors.New("Project executable not found")
             }
         }
 
         // The project executable was found and path contains the binary
         build = exec.Command(path, args...)
 
+/*
+	if _, err := os.Stat(path); err == nil {
+		build = exec.Command(path, args...)
+	} else if _, err := os.Stat(path + RExtWin); err == nil {
+		build = exec.Command(path+RExtWin, args...)
+	} else {
+		if _, err = os.Stat(path); err == nil {
+			build = exec.Command(path, args...)
+		} else if _, err = os.Stat(path + RExtWin); err == nil {
+			build = exec.Command(path+RExtWin, args...)
+		} else {
+			return errors.New("project not found")
+		}
+	}
+*/
+
         // Append the env variables
 	appendEnvs := p.buildEnvs()
 	if len(appendEnvs) > 0 {
 		build.Env = append(build.Env, appendEnvs...)
 	}
-
 	// scan project stream
 	stdout, err := build.StdoutPipe()
 	stderr, err := build.StderrPipe()
 	if err != nil {
 		return err
 	}
-
 	if p.Tools.Run.Dir != "" {
 		build.Dir = p.Tools.Run.Dir
 	}
-
 	if err := build.Start(); err != nil {
 		return err
 	}
-
 	execOutput, execError := bufio.NewScanner(stdout), bufio.NewScanner(stderr)
 	stopOutput, stopError := make(chan bool, 1), make(chan bool, 1)
-
 	scanner := func(stop chan bool, output *bufio.Scanner, isError bool) {
 		for output.Scan() {
 			text := output.Text()
@@ -695,10 +681,8 @@ func (p *Project) run(path string, stream chan Response, stop <-chan bool) (err 
 		}
 		close(stop)
 	}
-
 	go scanner(stopOutput, execOutput, false)
 	go scanner(stopError, execError, true)
-
 	for {
 		select {
 		case <-stop:

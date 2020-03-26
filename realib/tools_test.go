@@ -7,6 +7,7 @@ func TestTools_Setup(t *testing.T) {
 		Clean: Tool{
 			Status: true,
 			name:   "test",
+			isTool: false,
 			Method: "test",
 			Args:   []string{"arg"},
 		},
@@ -16,6 +17,9 @@ func TestTools_Setup(t *testing.T) {
 		t.Error("Unexpected value")
 	}
 	if tools.Clean.Method != "test" {
+		t.Error("Unexpected value")
+	}
+	if !tools.Clean.isTool {
 		t.Error("Unexpected value")
 	}
 }

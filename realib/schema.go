@@ -77,19 +77,6 @@ func (s *Schema) New(c *cli.Context) Project {
 	return project
 }
 
-// Params parse one by one the given argumentes
-func params(params *cli.Context) []string {
-	argsN := params.NArg()
-	if argsN > 0 {
-		var args []string
-		for i := 0; i <= argsN-1; i++ {
-			args = append(args, params.Args().Get(i))
-		}
-		return args
-	}
-	return nil
-}
-
 // Filter project list by field
 func (s *Schema) Filter(field string, value interface{}) []Project {
 	result := []Project{}
@@ -105,3 +92,17 @@ func (s *Schema) Filter(field string, value interface{}) []Project {
 	}
 	return result
 }
+
+// Params parse one by one the given argumentes
+func params(params *cli.Context) []string {
+	argsN := params.NArg()
+	if argsN > 0 {
+		var args []string
+		for i := 0; i <= argsN-1; i++ {
+			args = append(args, params.Args().Get(i))
+		}
+		return args
+	}
+	return nil
+}
+
