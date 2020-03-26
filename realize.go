@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"realize/realize"
+	"realize/realib"
 	"strconv"
 	"strings"
 	"time"
@@ -17,7 +17,9 @@ var r realize.Realize
 
 // Realize cli commands
 func main() {
+
 	r.Sync = make(chan string)
+
 	app := &cli.App{
 		Name:        strings.Title(realize.RPrefix),
 		Version:     realize.RVersion,
@@ -98,6 +100,7 @@ func main() {
 			},
 		},
 	}
+
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
 	}

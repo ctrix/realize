@@ -6,22 +6,7 @@ import (
 	"os"
 	"path"
 	"strings"
-
-	"github.com/urfave/cli/v2"
 )
-
-// Params parse one by one the given argumentes
-func params(params *cli.Context) []string {
-	argsN := params.NArg()
-	if argsN > 0 {
-		var args []string
-		for i := 0; i <= argsN-1; i++ {
-			args = append(args, params.Args().Get(i))
-		}
-		return args
-	}
-	return nil
-}
 
 // Split each arguments in multiple fields
 func split(args, fields []string) []string {

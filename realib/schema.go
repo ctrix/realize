@@ -36,14 +36,9 @@ func (s *Schema) Remove(name string) error {
 
 // New create a project using cli fields
 func (s *Schema) New(c *cli.Context) Project {
-	var vgo bool
 	name := filepath.Base(c.String("path"))
 	if len(name) == 0 || name == "." {
 		name = filepath.Base(Wdir())
-	}
-
-	if hasGoMod(Wdir()) {
-		vgo = true
 	}
 
 	project := Project{
@@ -71,7 +66,6 @@ func (s *Schema) New(c *cli.Context) Project {
 			Run: Tool{
 				Status: c.Bool("run"),
 			},
-			vgo: vgo,
 		},
 		Args: params(c),
 		Watcher: Watch{
@@ -81,6 +75,19 @@ func (s *Schema) New(c *cli.Context) Project {
 		},
 	}
 	return project
+}
+
+// Params parse one by one the given argumentes
+func params(params *cli.Context) []string {
+	argsN := params.NArg()
+	if argsN > 0 {
+		var args []string
+		for i := 0; i <= argsN-1; i++ {
+			args = append(args, params.Args().Get(i))
+		}
+		return args
+	}
+	return nil
 }
 
 // Filter project list by field

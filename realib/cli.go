@@ -18,12 +18,16 @@ import (
 var (
 	// RPrefix tool name
 	RPrefix = "realize"
+
 	// RVersion current version
-	RVersion = "2.0.3"
+	RVersion = "2.1.0"
+
 	// RExt file extension
 	RExt = ".yaml"
+
 	// RFile config file name
 	RFile = "." + RPrefix + RExt
+
 	//RExtWin windows extension
 	RExtWin = ".exe"
 )
@@ -63,9 +67,11 @@ func init() {
 	// custom log
 	log.SetFlags(0)
 	log.SetOutput(LogWriter{})
+
 	if build.Default.GOPATH == "" {
 		log.Fatal("$GOPATH isn't set properly")
 	}
+
 	path := filepath.SplitList(build.Default.GOPATH)
 	if err := os.Setenv("GOBIN", filepath.Join(path[len(path)-1], "bin")); err != nil {
 		log.Fatal(err)
@@ -87,15 +93,17 @@ func (r *Realize) Start() error {
 	if len(r.Schema.Projects) > 0 {
 		var wg sync.WaitGroup
 		wg.Add(len(r.Schema.Projects))
+
 		for k := range r.Schema.Projects {
 			r.Schema.Projects[k].exit = make(chan os.Signal, 1)
 			signal.Notify(r.Schema.Projects[k].exit, os.Interrupt)
 			r.Schema.Projects[k].parent = r
 			go r.Schema.Projects[k].Watch(&wg)
 		}
+
 		wg.Wait()
 	} else {
-		return errors.New("there are no projects")
+		return errors.New("there are no projects to run")
 	}
 	return nil
 }
